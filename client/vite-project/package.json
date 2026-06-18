@@ -1,5 +1,5 @@
 {
-  "name": "client",
+  "name": "vite-project",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,15 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "bootstrap": "^5.3.8",
-    "dayjs": "^1.11.21",
     "react": "^19.2.6",
-    "react-bootstrap": "^2.10.10",
-    "react-bootstrap-icons": "^1.11.6",
-    "react-dom": "^19.2.6",
-    "react-router": "^8.0.0",
-    "react-router-dom": "^7.18.0",
-    "sqlite3": "^6.0.1"
+    "react-dom": "^19.2.6"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

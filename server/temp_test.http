@@ -1,0 +1,25 @@
+GET http://localhost:3001/api/network
+
+###
+
+POST http://localhost:3001/api/sessions
+Content-Type: application/json
+
+{
+  "username": "Borel",
+  "password": "brl1"
+}
+
+###
+
+POST http://localhost:3001/api/sessions
+Content-Type: application/json
+
+{
+  "username": "Yannick",
+  "password": "ynnck"
+}
+
+###
+
+GET http://localhost:3001/api/sessions/current
