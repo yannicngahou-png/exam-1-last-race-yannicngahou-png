@@ -23,3 +23,15 @@ Content-Type: application/json
 ###
 
 GET http://localhost:3001/api/sessions/current
+
+
+###
+
+GET http://localhost:3001/api/segments
+
+###
+
+POST http://localhost:3001/api/games/start
+
+###
+GET http://localhost:3001/api/rankings
