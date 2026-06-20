@@ -85,7 +85,6 @@ app.get('/api/sessions/current', (req, res) => {
   return res.status(401).json({ error: 'No active session' });
 });
 
-// PUBLIC INFRASTRUCTURE ENDPOINTS
 
 //  GET /api/network — full network (lines + stations + connections) for the Setup phase
 app.get('/api/network', async (req, res) => {
@@ -99,26 +98,34 @@ app.get('/api/network', async (req, res) => {
   }
 });
 
-// GET /api/segments - Returns all unique, randomized adjacent tracks for Planning phase
+// GET /api/segments - Returns all unique, randomized adjacent segments for Planning phase
 app.get('/api/segments', isLoggedIn, async (req, res) => {
   try {
+    //retreive connections from db,  format : { lineId, stationId, stationName, position }
     const tracks = await getAllLineConnections();
     const lineGroups = {};
     
+    // stored stations by line metro
     tracks.forEach(t => {
       if (!lineGroups[t.lineId]) lineGroups[t.lineId] = [];
       lineGroups[t.lineId].push(t);
     });
 
+    // define unique kay for each segment to avoid duplicates
     const registeredKeys = new Set();
     const adjacentSegments = [];
 
     Object.values(lineGroups).forEach(stationRows => {
+
+      // for each line, we define segment by taking the station at position i and the one following i+1
       for (let i = 0; i < stationRows.length - 1; i++) {
         const first = stationRows[i];
         const second = stationRows[i + 1];
+
+      // we define keys with pair like '1-2' representing station index 1 and 2 that is unique event in another line if we have the same stations orders
         const identifierKey = [Math.min(first.stationId, second.stationId), Math.max(first.stationId, second.stationId)].join('-');
-        
+      
+      // segment registration
         if (!registeredKeys.has(identifierKey)) {
           registeredKeys.add(identifierKey);
           adjacentSegments.push({
@@ -159,14 +166,30 @@ app.post('/api/games/start', isLoggedIn, async (req, res) => {
         adjacencyList[list[i]].add(list[i + 1]);
         adjacencyList[list[i + 1]].add(list[i]);
       }
+      //example : 
+      // connection table : (line_id, station_id, position) 
+      // Red Line: San Salvario - Porta Velaria - Vanchiglia - Lingotto, - Mercato Antico
+                // [1, 1, 0],     [1, 2, 1],      [1, 3, 2],    [1, 4, 3], [1, 10, 4],   
+      // after the for above  whe have
+      //       adjacencyList = {
+      //   1: Set { 2 },       // from  San Salvario (1), we can reach Porta Velaria (2)
+      //   2: Set { 1, 3 },    // from  Porta Velaria (2), we can reach San Salvario (1) and Vanchiglia (3)
+      //   3: Set { 2, 4 }     ...   
+      //   4: set { 3, 10}     ...
+      //  10: set { 4}         ...
+      // };      
     });
 
     // Asynchronous breadth-first path calculator algorithm
     const calculateDistancesBfs = (rootId) => {
+
+      // initialisation with a station from which we are going to calculate the distance to other linked stations
       const trackingMap = { [rootId]: 0 };
       const evaluationQueue = [rootId];
+
       while (evaluationQueue.length) {
         const active = evaluationQueue.shift();
+
         for (const link of adjacencyList[active]) {
           if (trackingMap[link] === undefined) {
             trackingMap[link] = trackingMap[active] + 1;
@@ -175,8 +198,17 @@ app.post('/api/games/start', isLoggedIn, async (req, res) => {
         }
       }
       return trackingMap;
+
+      // exemple of a trackingMap with rootId = 3 (Vanchiglia) ;  
+      // [id station : distance from Vanchiglia]
+      // 3: 0, start station
+      // 2: 1, Lingotto
+      // 4: 1, Porta Velaria
+      // 1: 2,  San Salvario
+      // 10: 2, Mercato Antico
     };
 
+    // filter pairs of stations with distance between them >=3 
     const eligiblePairsList = [];
     stations.forEach(origin => {
       const distances = calculateDistancesBfs(origin.id);
@@ -189,6 +221,8 @@ app.post('/api/games/start', isLoggedIn, async (req, res) => {
 
     if (eligiblePairsList.length === 0) return res.status(500).json({ error: 'Network layout validation failure.' });
     
+
+    // randomly select one pair 
     const choice = eligiblePairsList[Math.floor(Math.random() * eligiblePairsList.length)];
     return res.json({
       startStation: stations.find(s => s.id === choice.startId),
@@ -196,6 +230,80 @@ app.post('/api/games/start', isLoggedIn, async (req, res) => {
     });
   } catch (err) {
     return res.status(500).json({ error: 'Could not initialize a new game context.' });
+  }
+});
+
+
+// POST /api/games/submit - Runs custom path validations and returns simulation steps
+app.post('/api/games/submit', isLoggedIn, async (req, res) => {
+  const { route, startStationId, endStationId } = req.body;
+
+  // body format check
+  if (!Array.isArray(route) || typeof startStationId !== 'number' || typeof endStationId !== 'number') {
+    return res.status(400).json({ error: 'Corrupt payload variables.' });
+  }
+
+  try {
+    const rawTrackList = await getAllLineStations();
+    const networkTracks = {};
+    const stationServingLines = {};
+
+    rawTrackList.forEach(t => {
+
+      // station lists ordered by lines, usefull to extract adjacent segment
+      if (!networkTracks[t.lineId]) networkTracks[t.lineId] = [];
+      networkTracks[t.lineId].push({ stationId: t.stationId, position: t.position });
+      
+      // for each station, we store all lines passing through
+      if (!stationServingLines[t.stationId]) stationServingLines[t.stationId] = new Set();
+      stationServingLines[t.stationId].add(t.lineId);
+    });
+
+    // dynamic identification of intersection stations 
+    // a station is a hub if more than one line pass through it.
+    const crossOverHubs = new Set(
+      Object.entries(stationServingLines).filter(([, lineIds]) => lineIds.size > 1).map(([sId]) => Number(sId))
+    );
+
+    // Validate using helper logic sequence
+    const checkValid = processRouteValidation(route, startStationId, endStationId, networkTracks, stationServingLines, crossOverHubs);
+
+    if (!checkValid) {
+
+      // invalid path -> score =0 and game saved 
+      await saveCompletedGame(req.user.id, startStationId, endStationId, 0);
+      return res.json({ valid: false, score: 0, steps: [] });
+    }
+
+    // Execute random event outcomes per verified segment step
+    const eventsPool = await getAllEvents();
+    let currentWallet = 20;
+    const processStepsLog = [];
+
+    // train simulation path
+    for (let i = 0; i < route.length - 1; i++) {
+
+      //randomly select an event
+      const selectedIncident = eventsPool[Math.floor(Math.random() * eventsPool.length)];
+      currentWallet += selectedIncident.effect;
+
+      processStepsLog.push({
+        fromStationId: route[i],
+        toStationId: route[i + 1],
+        event: { description: selectedIncident.description, effect: selectedIncident.effect },
+        coinsAfter: currentWallet
+      });
+    }
+    // the score should not be less than 0 (put 0 is the final score <0) 
+    const finalAccumulatedScore = Math.max(0, currentWallet);
+
+    // save the game
+    await saveCompletedGame(req.user.id, startStationId, endStationId, finalAccumulatedScore);
+    
+    // send the result to the client
+    return res.json({ valid: true, score: finalAccumulatedScore, steps: processStepsLog });
+  } catch (err) {
+    return res.status(500).json({ error: 'Internal scoring simulation crash.' });
   }
 });
 
@@ -209,6 +317,7 @@ app.get('/api/rankings', isLoggedIn, async (req, res) => {
   }
 });
 
+// conformity checks of results enter by the user during the game
 function processRouteValidation(route, startId, endId, tracksByLine, linesPerStation, crossOverHubs) {
   if (!route || route.length < 2) return false;
   if (route[0] !== startId || route[route.length - 1] !== endId) return false;
@@ -216,6 +325,8 @@ function processRouteValidation(route, startId, endId, tracksByLine, linesPerSta
   const segmentTrackMap = {};
   Object.entries(tracksByLine).forEach(([lineId, structuralArray]) => {
     structuralArray.sort((x, y) => x.position - y.position);
+
+    // control physical linestations selected by the user
     for (let i = 0; i < structuralArray.length - 1; i++) {
       const nodeA = structuralArray[i].stationId;
       const nodeB = structuralArray[i + 1].stationId;
@@ -226,7 +337,7 @@ function processRouteValidation(route, startId, endId, tracksByLine, linesPerSta
     }
   });
 
-
+  // runningPermittedLines contains lines set on which the player is at time t
   let runningPermittedLines = linesPerStation[route[0]] ? new Set(linesPerStation[route[0]]) : new Set();
 
   for (let i = 0; i < route.length - 1; i++) {
@@ -235,17 +346,22 @@ function processRouteValidation(route, startId, endId, tracksByLine, linesPerSta
     const key = `${Math.min(stationA, stationB)}-${Math.max(stationA, stationB)}`;
     
     const segmentMatchingLines = segmentTrackMap[key];
+
+    // if the segment selected by the user doesn't exist in our db, it means the stations are not adjacent, the road fails
     if (!segmentMatchingLines || segmentMatchingLines.size === 0) return false;
 
+    // intersection calculations
     const overlappingLines = new Set([...runningPermittedLines].filter(l => segmentMatchingLines.has(l)));
 
-    if (overlappingLines.size === 0) {
-      if (!crossOverHubs.has(stationA)) return false;
+    if (overlappingLines.size === 0) { // no common line 
+      if (!crossOverHubs.has(stationA)) return false; // interchange is only possible on hubs stations
       runningPermittedLines = new Set(segmentMatchingLines);
     } else {
       runningPermittedLines = overlappingLines;
     }
   }
+
+  // if each previous checks didn't return false the trip is valid
   return true;
 }
 

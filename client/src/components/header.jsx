@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Navbar, Nav, Container, Button } from 'react-bootstrap';
 import { useAuth } from '../context/authContext.jsx'; 
 
-export default function NavBar() {
+export default function Header() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 

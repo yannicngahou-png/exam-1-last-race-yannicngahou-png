@@ -6,7 +6,7 @@
   --metro-orange: #e66f0e;
   --bg-dark: #1a1a2e;
   --bg-card: #16213e;
-  --text-light: #edf2f4;
+  --text-light: #f4eeed;
   --accent: #f5f3f1;
 }
 
@@ -40,6 +40,12 @@ body {
   color: var(--text-light);
 }
 
+.footer{
+  color: #000000 !important;
+  text-align: center;
+  
+}
+
 .btn-metro {
   background-color: var(--accent);
   color: #1a1a2e;
@@ -54,7 +60,7 @@ body {
 /* Network map */
 .network-map svg text {
   font-size: 11px;
-  fill: #edf2f4;
+  fill: #000000;
 }
 
 /* Timer bar */
