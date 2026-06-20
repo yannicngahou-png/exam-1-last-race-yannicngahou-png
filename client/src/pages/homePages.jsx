@@ -1,7 +1,7 @@
 import React from 'react';
 import { Container, Button, Card, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext.jsx';
+import { useAuth } from '../context/authContext.jsx';
 
 function HomePage() {
   const { user } = useAuth();
@@ -57,13 +57,13 @@ function HomePage() {
 
       <Card className="p-4">
         <h4 style={{ color: '#d64316' }}> How to play</h4>
-        <ul className="text-secondary">
+        <ol >
           <li>You start with <strong>20 coins</strong> each game.</li>
           <li>You are assigned a random <strong>start</strong> and <strong>destination</strong> station.</li>
           <li>Your route must follow metro lines, you can only change lines at <strong>interchange stations</strong>.</li>
           <li>Submit your route before the timer runs out or the route built so far will be used.</li>
           
-        </ul>
+        </ol>
         {!user && (
           <p className="text-warning mt-2">
             🔒 You must be logged in to see the network map and play the game.

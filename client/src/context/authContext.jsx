@@ -30,7 +30,7 @@ function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {loading ? <div>Loading</div>: children}
+      {loading ? <div>"Loading ..."</div>: children}
     </AuthContext.Provider>
   );
 }
