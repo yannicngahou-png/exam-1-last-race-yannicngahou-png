@@ -238,7 +238,7 @@ app.post('/api/games/start', isLoggedIn, async (req, res) => {
 app.post('/api/games/submit', isLoggedIn, async (req, res) => {
   const { route, startStationId, endStationId } = req.body;
   
-  console.log("0- submit start",  req.body)
+  //console.log("0- submit start",  req.body)
 
   // body format check
   if (!Array.isArray(route) || typeof startStationId !== 'number' || typeof endStationId !== 'number') {
@@ -249,7 +249,7 @@ app.post('/api/games/submit', isLoggedIn, async (req, res) => {
     const rawTrackList = await getAllLineConnections();
     const networkTracks = {};
     const stationServingLines = {};
-    console.log("0- submit start 1 : ", stationServingLines)
+    //console.log("0- submit start 1 : ", stationServingLines)
 
 
     rawTrackList.forEach(t => {
@@ -262,18 +262,18 @@ app.post('/api/games/submit', isLoggedIn, async (req, res) => {
       if (!stationServingLines[t.stationId]) stationServingLines[t.stationId] = new Set();
       stationServingLines[t.stationId].add(t.lineId);
     });
-    console.log("0- submit start 2: ", stationServingLines);
+    //console.log("0- submit start 2: ", stationServingLines);
 
     // dynamic identification of intersection stations 
     // a station is a hub if more than one line pass through it.
     const crossOverHubs = new Set(
       Object.entries(stationServingLines).filter(([, lineIds]) => lineIds.size > 1).map(([sId]) => Number(sId))
     );
-    console.log("0- submit start 3: ", crossOverHubs)
+    //console.log("0- submit start 3: ", crossOverHubs)
 
     // Validate using helper logic sequence
     const checkValid = processRouteValidation(route, startStationId, endStationId, networkTracks, stationServingLines, crossOverHubs);
-    console.log("1- check Valid : ", checkValid)
+    //console.log("1- check Valid : ", checkValid)
 
     if (!checkValid) {
 
@@ -287,7 +287,7 @@ app.post('/api/games/submit', isLoggedIn, async (req, res) => {
     let currentWallet = 20;
     const processStepsLog = [];
 
-    console.log("2- check events : ", eventsPool)
+    //console.log("2- check events : ", eventsPool)
 
     // train simulation path
     for (let i = 0; i < route.length - 1; i++) {
@@ -305,7 +305,7 @@ app.post('/api/games/submit', isLoggedIn, async (req, res) => {
     }
     // the score should not be less than 0 (put 0 is the final score <0) 
     const finalAccumulatedScore = Math.max(0, currentWallet);
-    console.log("3- finalScore : ", finalAccumulatedScore);
+    //console.log("3- finalScore : ", finalAccumulatedScore);
 
     // save the game
     await saveCompletedGame(req.user.id, startStationId, endStationId, finalAccumulatedScore);

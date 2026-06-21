@@ -35,3 +35,16 @@ POST http://localhost:3001/api/games/start
 
 ###
 GET http://localhost:3001/api/rankings
+
+###
+DELETE http://localhost:3001/api/sessions/current
+
+###
+POST  http://localhost:3001/api/games/submit
+Content-Type: application/json
+
+{
+  "route": ["test", 1],
+  "startStationId": "9",
+  "endStationId": "5"
+}

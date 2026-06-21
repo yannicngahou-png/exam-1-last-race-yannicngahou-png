@@ -75,31 +75,47 @@ db.serialize(() => {
 
     // users definition
     const users = [
-      { username: 'Yannick', password: 'ynnck' },
-      { username: 'Borel', password: 'brl' },
-      { username: 'Silvia', password: 'slv' },
+      { id: 1, username: 'Yannick', password: 'ynnck' },
+      { id: 2, username: 'Silvia', password: 'slv' },
+      { id: 3, username: 'Borel', password: 'brl' },
     ];
 
     // users insertion 
     users.forEach(u => {
       const salt = crypto.randomBytes(16).toString('hex');
       const hash = crypto.scryptSync(u.password, salt, 64).toString('hex');
-      db.run('INSERT INTO users (username, password, salt) VALUES (?, ?, ?)', [u.username, hash, salt]);
+      db.run('INSERT INTO users (id, username, password, salt) VALUES (?, ?, ?, ?)', [u.id, u.username, hash, salt]);
       });
 
     // ## Stations initialisation ##
 
     const stationNames = [
-      'San Salvario', 'Porta Velaria', 'Vanchiglia', 'Lingotto',
-      'Fontana Oscura', 'Borgo Sereno', 'Borgo Po', 'Torre Cinerea',
-      'Crocetta', 'Mercato Antico', 'Aurora', 'Ponte Aureo',
-      'Quartiere Vecchio', 'Bellavista'
-    ];
-    stationNames.forEach(s => db.run('INSERT INTO stations (name) VALUES (?)', [s]));
+    { id: 1, name: 'San Salvario' },
+    { id: 2, name: 'Porta Velaria' },
+    { id: 3, name: 'Vanchiglia' },
+    { id: 4, name: 'Lingotto' },
+    { id: 5, name: 'Fontana Oscura' },
+    { id: 6, name: 'Borgo Sereno' },
+    { id: 7, name: 'Borgo Po' },
+    { id: 8, name: 'Torre Cinerea' },
+    { id: 9, name: 'Crocetta' },
+    { id: 10, name: 'Mercato Antico' },
+    { id: 11, name: 'Aurora' },
+    { id: 12, name: 'Ponte Aureo' },
+    { id: 13, name: 'Quartiere Vecchio' },
+    { id: 14, name: 'Bellavista' }
+  ];
+    stationNames.forEach(s => db.run('INSERT INTO stations (id, name) VALUES (?, ?)', [s.id, s.name]));
 
     // ## Lines initialisation ##
-    const lines = ['Red Line', 'Blue Line', 'Green Line', 'Yellow Line', 'Orange Line'];
-    lines.forEach(l => db.run('INSERT INTO lines (name) VALUES (?)', [l]));
+    const lines = [
+      { id: 1, name: 'Red Line' },
+      { id: 2, name: 'Blue Line' },
+      { id: 3, name: 'Green Line' },
+      { id: 4, name: 'Yellow Line' },
+      // { id: 5, name: 'Orange Line' }
+    ];
+    lines.forEach(l => db.run('INSERT INTO lines (id, name) VALUES (?, ?)', [l.id, l.name]));
   
 
     // ## Connections initialisation ##
@@ -110,17 +126,17 @@ db.serialize(() => {
             // Red Line: San Salvario - Porta Velaria - Vanchiglia - Lingotto, - Mercato Antico
             [1, 1, 0], [1, 2, 1], [1, 3, 2], [1, 4, 3], [1, 10, 4],
 
-            // Blue Line : San Salvario - Fontana Oscura - Borgo Sereno - Borgo Po - Lingotto
-            [2, 1, 0], [2, 5, 1], [2, 6, 2], [2, 7, 3], [2, 4, 4],
+            // Blue Line : San Salvario - Fontana Oscura - Borgo Sereno - Borgo Po - Bellavista
+            [2, 1, 0], [2, 5, 1], [2, 6, 2], [2, 7, 3], [2, 14, 4],
 
-            // Green Line : Porta Velaria - Fontana Oscura - Mercato Antico - Crocetta - Vanchiglia
-            [3, 2, 0], [3, 5, 1], [3, 10, 2], [3, 9, 3], [3, 3, 4],
+            // Green Line : Porta Velaria - Vanchiglia - Crocetta - Ponte Aureo - Aurora
+            [3, 2, 0], [3, 3, 1], [3, 9, 2], [3, 12, 3], [3, 11, 4],
 
-            // Yellow Line : Lingotto - Torre Cinerea - Mercato Antico - Crocetta - Quartiere Vecchio
-            [4, 4, 0], [4, 8, 1], [4, 10, 2], [4, 9, 3], [4, 13, 4],
+            // Yellow Line : Lingotto - Torre Cinerea - Crocetta - Borgo Po - Quartiere Vecchio
+            [4, 4, 0], [4, 8, 1], [4, 9, 2], [4, 7, 3], [4, 13, 4],
 
             // Orange Line : Mercato Antico - Aurora - Ponte Aureo - Bellavista - Vanchiglia
-            [5, 10, 0], [5, 11, 1], [5, 12, 2], [5, 14, 3], [5, 3, 4]
+            // [5, 10, 0], [5, 11, 1], [5, 12, 2], [5, 14, 3], [5, 3, 4]
           ];
           lineConnections.forEach(([lId, sId, pos]) => {
             db.run('INSERT INTO connections (line_id, station_id, position) VALUES (?, ?, ?)', [lId, sId, pos]);
