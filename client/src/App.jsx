@@ -49,9 +49,9 @@ function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
-          
+          <footer style={{ flexShrink: 0, backgroundColor: '#5f6269', padding: '10px', textAlign: 'center' }}>
             <Footer />
-         
+          </footer>
         </div>
       </AuthProvider>
     </Router>

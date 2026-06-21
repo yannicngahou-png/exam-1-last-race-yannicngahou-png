@@ -13,7 +13,7 @@ export default function Header() {
   };
 
   return (
-    <Navbar expand="lg" style={{ background: '#0f172a', borderBottom: '2px solid #e3e6eb' }}>
+    <Navbar expand="lg" style={{ background: '#5f6269', borderBottom: '2px solid #e3e6eb' }}>
       <Container>
         <Navbar.Brand as={Link} to="/" style={{ color: '#d64316', fontWeight: 900 }}>Last Race</Navbar.Brand>
         <Navbar.Toggle />
