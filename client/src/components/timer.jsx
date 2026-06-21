@@ -22,7 +22,7 @@ function Timer({ totalSeconds, onExpire }) {
   return (
     <div>
       <div className="d-flex justify-content-between mb-1">
-        <small style={{ color }}>⏱ Time remaining</small>
+        <small style={{ color }}> Time remaining</small>
         <strong style={{ color }}>{remaining}s</strong>
       </div>
       <div className="timer-bar-wrap">

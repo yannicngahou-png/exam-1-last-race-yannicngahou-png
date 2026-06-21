@@ -8,6 +8,7 @@
   --bg-card: #16213e;
   --text-light: #f4eeed;
   --accent: #f5f3f1;
+  --noaccent : #2f522d;
 }
 
 body {
@@ -80,7 +81,7 @@ body {
 .coin-badge {
   font-size: 1.4rem;
   font-weight: 800;
-  color: var(--accent);
+  color: var(--noaccent);
 }
 
 /* Rankings */
@@ -100,7 +101,7 @@ body {
 .segment-list {
   max-height: 340px;
   overflow-y: auto;
-  background: #0f172a;
+  background: #dfdfdf;
   border-radius: 8px;
   padding: 8px;
 }
@@ -111,7 +112,7 @@ body {
   transition: background 0.15s;
 }
 .segment-item:hover {
-  background: #1e293b;
+  background: #b6e8b1;
 }
 .segment-item.selected {
   background: rgba(244, 162, 97, 0.25);

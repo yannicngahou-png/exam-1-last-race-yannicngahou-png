@@ -8,6 +8,7 @@ import Footer from './components/footer.jsx';
 import { HomePage } from './pages/homePage.jsx';
 import { LoginPage } from './pages/loginPage.jsx';
 import {GamePage} from './pages/trainPage.jsx';
+import { RankingsPage } from './pages/rankingPage.jsx';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
  
@@ -33,6 +34,14 @@ function App() {
                element={
                 <ProtectedRoute>
                   <GamePage />
+                </ProtectedRoute>
+              }
+              />
+              <Route
+               path="/ranking"
+               element={
+                <ProtectedRoute>
+                  <RankingsPage />
                 </ProtectedRoute>
               }
               />

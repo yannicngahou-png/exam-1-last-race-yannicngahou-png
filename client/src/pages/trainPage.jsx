@@ -5,7 +5,7 @@ import {NetworkMap} from '../components/networkMap.jsx';
 import {Timer} from '../components/timer.jsx';
 
 
-// ─── PHASE CONSTANTS ──────────────────────────────────────────────────────────
+// PHASE CONSTANTS 
 const PHASE = { SETUP: 'setup', PLANNING: 'planning', EXECUTION: 'execution', RESULT: 'result' };
 
 function GamePage() {
@@ -27,7 +27,7 @@ function GamePage() {
       .catch(err => setError(err.message));
   }, []);
 
-  // ─
+  // setup planning
   const handleStartPlanning = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -45,7 +45,7 @@ function GamePage() {
     }
   }, []);
 
-  // ─── Route building ─────────────────────────────────────────────────────────
+  //  route building 
   const addSegment = useCallback((segA, segB) => {
     setRoute(prev => {
       const last = prev[prev.length - 1];
@@ -63,7 +63,7 @@ function GamePage() {
     setRoute(prev => prev.length > 1 ? prev.slice(0, -1) : prev);
   }, []);
 
-  // ─── Planning → Execution ───────────────────────────────────────────────────
+  //  Planning → Execution 
   const submitRoute = useCallback(async (finalRoute) => {
     if (!gameSetup) return;
     setLoading(true);
@@ -98,7 +98,7 @@ function GamePage() {
     }
   }, [route, submitRoute]);
 
-  // ─── Execution step ──────────────────────────────────────────────────────────
+  //  execution step 
   const handleNextStep = useCallback(() => {
     if (!result) return;
     if (execStep + 1 >= result.steps.length) {
@@ -108,7 +108,7 @@ function GamePage() {
     }
   }, [execStep, result]);
 
-  // ─── New game ────────────────────────────────────────────────────────────────
+  // new game 
   const handleNewGame = useCallback(() => {
     setPhase(PHASE.SETUP);
     setSegments(null);
@@ -132,7 +132,7 @@ function GamePage() {
     <Container className="py-4">
       {error && <Alert variant="danger" dismissible onClose={() => setError('')}>{error}</Alert>}
 
-      {/* ── SETUP ─────────────────────────────────────────────── */}
+      {/*  SETUP  */}
       {phase === PHASE.SETUP && (
         <SetupPhase
           network={network}
@@ -141,7 +141,7 @@ function GamePage() {
         />
       )}
 
-      {/* ── PLANNING ──────────────────────────────────────────── */}
+      {/*  planning  */}
       {phase === PHASE.PLANNING && gameSetup && segments && (
         <PlanningPhase
           network={network}
@@ -156,7 +156,7 @@ function GamePage() {
         />
       )}
 
-      {/* ── EXECUTION ─────────────────────────────────────────── */}
+      {/*  execution  */}
       {phase === PHASE.EXECUTION && result && (
         <ExecutionPhase
           network={network}
@@ -168,7 +168,7 @@ function GamePage() {
         />
       )}
 
-      {/* ── RESULT ────────────────────────────────────────────── */}
+      {/*  result  */}
       {phase === PHASE.RESULT && result && (
         <ResultPhase
           result={result}
@@ -179,27 +179,27 @@ function GamePage() {
   );
 }
 
-// ─── Setup Phase ──────────────────────────────────────────────────────────────
+//  Setup Phase 
 function SetupPhase({ network, onReady, loading }) {
   return (
     <div>
-      <h3 className="mb-3" style={{ color: '#d64316' }}>🗺️ Phase 1 — Study the Network</h3>
+      <h3 className="mb-3" style={{ color: '#d64316' }}>🗺️ Phase 1 : Study the Network</h3>
       <p className="text-secondary mb-4">
-        Take your time to memorize the map. When you're ready, start the game — the map will disappear and you'll have <strong>90 seconds</strong> to plan your route!
+        Take your time to memorize the map. When you're ready, start the game the map will disappear and you'll have <strong>90 seconds</strong> to plan your route!
       </p>
       <Card className="p-3 mb-4">
         <NetworkMap network={network} showLines={true} />
       </Card>
       <div className="text-center">
         <Button className="btn-metro px-5 py-2" size="lg" onClick={onReady} disabled={loading}>
-          {loading ? 'Starting…' : "I'm Ready — Start Game!"}
+          {loading ? 'Starting…' : "Start Game!"}
         </Button>
       </div>
     </div>
   );
 }
 
-// ─── Planning Phase ───────────────────────────────────────────────────────────
+//  Planning Phase 
 function PlanningPhase({ network, segments, gameSetup, route, onAddSegment, onRemoveLast, onSubmit, onTimerExpire, loading }) {
   const { startStation, endStation } = gameSetup;
 
@@ -215,7 +215,7 @@ function PlanningPhase({ network, segments, gameSetup, route, onAddSegment, onRe
 
   return (
     <div>
-      <h3 className="mb-2" style={{ color: '#f4a261' }}>🧠 Phase 2 — Plan Your Route</h3>
+      <h3 className="mb-2" style={{ color: '#d64316' }}>🧠 Phase 2 : Plan Your Route</h3>
       <Row className="mb-3 align-items-center">
         <Col>
           <Badge bg="success" className="me-2">FROM: {startStation.name}</Badge>
@@ -232,7 +232,7 @@ function PlanningPhase({ network, segments, gameSetup, route, onAddSegment, onRe
         {/* Map (no lines) */}
         <Col md={6}>
           <Card className="p-2">
-            <small className="text-secondary mb-2 d-block">Map (no lines — lines hidden during planning)</small>
+            <small className="text-secondary mb-2 d-block">Map </small>
             <NetworkMap network={network} showLines={false} highlightRoute={route} />
           </Card>
         </Col>
@@ -240,7 +240,7 @@ function PlanningPhase({ network, segments, gameSetup, route, onAddSegment, onRe
         {/* Segment list + route builder */}
         <Col md={6}>
           <Card className="p-3">
-            <h6 style={{ color: '#f4a261' }}>Segments — click to add to route</h6>
+            <h6 style={{ color: '#d64316' }}>Segments : click to add to route</h6>
             <div className="segment-list mb-3">
               {segments.map((seg, i) => {
                 const key = `${Math.min(seg.station_a_id, seg.station_b_id)}-${Math.max(seg.station_a_id, seg.station_b_id)}`;
@@ -260,12 +260,12 @@ function PlanningPhase({ network, segments, gameSetup, route, onAddSegment, onRe
             </div>
 
             <div className="mb-3">
-              <h6 style={{ color: '#f4a261' }}>Your Route</h6>
+              <h6 style={{ color: '#d64316' }}>Your Route</h6>
               <div className="small" style={{ color: '#94a3b8', lineHeight: 1.8 }}>
                 {route.map((id, i) => (
                   <span key={id}>
                     {i > 0 && ' → '}
-                    <span style={{ color: id === startStation.id ? '#2a9d8f' : id === endStation.id ? '#e63946' : '#edf2f4' }}>
+                    <span style={{ color: id === startStation.id ? '#2a9d8f' : id === endStation.id ? '#e63946' : '#686868' }}>
                       {stationById[id]?.name || id}
                     </span>
                   </span>
@@ -288,7 +288,7 @@ function PlanningPhase({ network, segments, gameSetup, route, onAddSegment, onRe
   );
 }
 
-// ─── Execution Phase ──────────────────────────────────────────────────────────
+//  execution Phase 
 function ExecutionPhase({ network, result, execStep, route, gameSetup, onNext }) {
   const step = result.steps[execStep];
   const stationById = Object.fromEntries((network?.stations || []).map(s => [s.id, s]));
@@ -299,7 +299,7 @@ function ExecutionPhase({ network, result, execStep, route, gameSetup, onNext })
 
   return (
     <div>
-      <h3 className="mb-3" style={{ color: '#f4a261' }}>⚡ Phase 3 — Execution</h3>
+      <h3 className="mb-3" style={{ color: '#f4a261' }}>⚡ Phase 3 : Execution</h3>
 
       <Row className="g-3">
         <Col md={6}>
@@ -319,7 +319,7 @@ function ExecutionPhase({ network, result, execStep, route, gameSetup, onNext })
             </div>
             <div
               className="p-3 rounded mb-3"
-              style={{ background: '#0f172a', fontSize: '1rem', lineHeight: 1.6 }}
+              style={{ background: '#b6bac2', fontSize: '1rem', lineHeight: 1.6 }}
             >
               🎲 <em>{step.event.description}</em>
             </div>
@@ -339,7 +339,7 @@ function ExecutionPhase({ network, result, execStep, route, gameSetup, onNext })
   );
 }
 
-// ─── Result Phase ─────────────────────────────────────────────────────────────
+//  result Phase 
 function ResultPhase({ result, onNewGame }) {
   const stars = result.score >= 20 ? '🌟🌟🌟' : result.score >= 12 ? '⭐⭐' : result.score >= 5 ? '⭐' : '💀';
 

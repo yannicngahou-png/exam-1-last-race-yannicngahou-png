@@ -17,12 +17,12 @@ const STATION_POSITIONS = {
   'Fontana Oscura': [0.22, 0.35],
   'Borgo Sereno': [0.12, 0.52],
   'Borgo Po': [0.62, 0.58],
-  'Torre Cinerea': [0.68, 0.48],
-  "Crocetta": [0.48, 0.72],
+  'Torre Cinerea': [0.38, 0.48],
+  "Crocetta": [0.45, 0.72],
   'Mercato Antico': [0.90, 0.32],
-  'Aurora': [0.78, 0.65],
+  'Aurora': [0.78, 0.75],
   'Ponte Aureo': [0.55, 0.82],
-  'Quartiere Vecchio': [0.30, 0.82],
+  'Quartiere Vecchio': [0.25, 0.82],
   'Bellavista': [0.85, 0.50],
 };
 
