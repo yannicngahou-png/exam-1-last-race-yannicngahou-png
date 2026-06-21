@@ -1,3 +1,12 @@
+html, body, #root {
+  height: 100vh !important;
+  min-height: 100vh !important;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Supprime le scroll global de la fenêtre */
+}
+
+
 :root {
   --metro-red: #e63946;
   --metro-blue: #457b9d;
@@ -25,6 +34,10 @@ body {
   color: var(--accent) !important;
 }
 
+.navbar-brand:hover {
+ color:#6e8bc6;
+}
+
 .logout-btn{
   border-color: #ff4d4d ;
   color:#edf2f4 !important;
@@ -42,9 +55,14 @@ body {
 }
 
 .footer{
-  color: #000000 !important;
+  position: fixed;
+  color: #ffffff !important;
   text-align: center;
-  
+  /* position: fixed; */
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
 }
 
 .btn-metro {
@@ -87,10 +105,10 @@ body {
 /* Rankings */
 .ranking-table th {
   color: var(--accent);
-  border-color: #2a2a4a;
+  border-color: #7b7b92;
 }
 .ranking-table td {
-  border-color: #2a2a4a;
+  border-color: #7b7b92;
 }
 .ranking-row-me {
   background: rgba(244, 162, 97, 0.12);

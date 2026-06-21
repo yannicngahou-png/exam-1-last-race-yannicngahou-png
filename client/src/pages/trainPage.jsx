@@ -9,18 +9,20 @@ import {Timer} from '../components/timer.jsx';
 const PHASE = { SETUP: 'setup', PLANNING: 'planning', EXECUTION: 'execution', RESULT: 'result' };
 
 function GamePage() {
-  const [phase, setPhase] = useState(PHASE.SETUP);
-  const [network, setNetwork] = useState(null);
-  const [segments, setSegments] = useState(null);
-  const [gameSetup, setGameSetup] = useState(null);   // { startStation, endStation }
+  const [phase, setPhase] = useState(PHASE.SETUP);    // active rendering pipeline mode
+  const [network, setNetwork] = useState(null);       // full layout of nodes (lines, stations)
+  const [segments, setSegments] = useState(null);     // normalized randomized available segment tracks
+  const [gameSetup, setGameSetup] = useState(null);   // { startStation, endStation } dynamic assigned mission
   const [route, setRoute] = useState([]);              // array of station IDs
-  const [result, setResult] = useState(null);          // { valid, score, steps }
+  const [result, setResult] = useState(null);          // simulation scoring response payload from the API backend
   const [execStep, setExecStep] = useState(0);         // current step in execution
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');             // global operational exception log buffer
+  const [loading, setLoading] = useState(false);      // form-lock rendering safety toggle
+  
+  // anti-race condition controller flag ensuring route submission happens exactly once upon timer end
   const timerExpiredRef = useRef(false);
 
-  // Load network on mount
+  // load network on mount
   useEffect(() => {
     API.getNetwork()
       .then(setNetwork)
@@ -35,9 +37,9 @@ function GamePage() {
       const [setup, segs] = await Promise.all([API.startGame(), API.getSegments()]);
       setGameSetup(setup);
       setSegments(segs);
-      setRoute([setup.startStation.id]);
-      timerExpiredRef.current = false;
-      setPhase(PHASE.PLANNING);
+      setRoute([setup.startStation.id]); // automatically seeds the itinerary path with the starting node ID
+      timerExpiredRef.current = false;  // prepares expiration locks for active gameplay
+      setPhase(PHASE.PLANNING);         // advances to the planning phase
     } catch (err) {
       setError(err.message);
     } finally {
@@ -54,16 +56,19 @@ function GamePage() {
       if (last === segA) nextId = segB;
       else if (last === segB) nextId = segA;
       if (nextId === null) return prev; // segment doesn't connect to current end
-      if (prev.includes(nextId)) return prev; // no cycles
+      //if (prev.includes(nextId)) return prev; // no cycles
       return [...prev, nextId];
     });
   }, []);
 
+   // path Assembly Adjuster: Undo Step
+   // pops the last element from the array list to step backward while preventing stripping of the starting origin.
   const removeLastStation = useCallback(() => {
     setRoute(prev => prev.length > 1 ? prev.slice(0, -1) : prev);
   }, []);
 
-  //  Planning → Execution 
+  //  planning -> Execution 
+  // transmits built array mapping data upstream to resolve back-end simulation matrices.
   const submitRoute = useCallback(async (finalRoute) => {
     if (!gameSetup) return;
     setLoading(true);
@@ -76,6 +81,8 @@ function GamePage() {
       );
       setResult(res);
       setExecStep(0);
+
+      //advances directly to Execution phase if path checks out, otherwise skips directly to Results
       setPhase(res.valid && res.steps.length > 0 ? PHASE.EXECUTION : PHASE.RESULT);
     } catch (err) {
       setError(err.message);
@@ -84,6 +91,7 @@ function GamePage() {
     }
   }, [gameSetup]);
 
+    // automated Trigger Callback: Phase Timer Expiration Lock
   const handleTimerExpire = useCallback(() => {
     if (!timerExpiredRef.current) {
       timerExpiredRef.current = true;
@@ -108,7 +116,7 @@ function GamePage() {
     }
   }, [execStep, result]);
 
-  // new game 
+  // new game setup
   const handleNewGame = useCallback(() => {
     setPhase(PHASE.SETUP);
     setSegments(null);
@@ -232,7 +240,7 @@ function PlanningPhase({ network, segments, gameSetup, route, onAddSegment, onRe
         {/* Map (no lines) */}
         <Col md={6}>
           <Card className="p-2">
-            <small className="text-secondary mb-2 d-block">Map </small>
+            <small className="text-secondary mb-2 d-block">Network Map </small>
             <NetworkMap network={network} showLines={false} highlightRoute={route} />
           </Card>
         </Col>
@@ -264,7 +272,7 @@ function PlanningPhase({ network, segments, gameSetup, route, onAddSegment, onRe
               <div className="small" style={{ color: '#94a3b8', lineHeight: 1.8 }}>
                 {route.map((id, i) => (
                   <span key={id}>
-                    {i > 0 && ' → '}
+                    {i > 0 && ' -> '}
                     <span style={{ color: id === startStation.id ? '#2a9d8f' : id === endStation.id ? '#e63946' : '#686868' }}>
                       {stationById[id]?.name || id}
                     </span>
@@ -294,12 +302,13 @@ function ExecutionPhase({ network, result, execStep, route, gameSetup, onNext })
   const stationById = Object.fromEntries((network?.stations || []).map(s => [s.id, s]));
   const isLast = execStep + 1 >= result.steps.length;
 
+  // Calculates contextual UI color alerts corresponding to the modifier delta values of random events
   const effectColor = step.event.effect > 0 ? '#2a9d8f' : step.event.effect < 0 ? '#e63946' : '#94a3b8';
   const routeSoFar = route.slice(0, execStep + 2);
 
   return (
     <div>
-      <h3 className="mb-3" style={{ color: '#f4a261' }}>⚡ Phase 3 : Execution</h3>
+      <h3 className="mb-3" style={{ color: '#d64316' }}>⚡ Phase 3 : Execution</h3>
 
       <Row className="g-3">
         <Col md={6}>
@@ -314,7 +323,7 @@ function ExecutionPhase({ network, result, execStep, route, gameSetup, onNext })
             </div>
             <div className="mb-3" style={{ fontSize: '1.1rem' }}>
               <span style={{ color: '#2a9d8f' }}>{stationById[step.fromStationId]?.name}</span>
-              {' → '}
+              {' -> '}
               <span style={{ color: '#e63946' }}>{stationById[step.toStationId]?.name}</span>
             </div>
             <div
@@ -330,7 +339,7 @@ function ExecutionPhase({ network, result, execStep, route, gameSetup, onNext })
               🪙 {step.coinsAfter} coins remaining
             </div>
             <Button className="btn-metro mt-4" onClick={onNext}>
-              {isLast ? 'See Final Result' : 'Next Step →'}
+              {isLast ? 'See Final Result' : 'Next Step ->'}
             </Button>
           </Card>
         </Col>
@@ -341,14 +350,15 @@ function ExecutionPhase({ network, result, execStep, route, gameSetup, onNext })
 
 //  result Phase 
 function ResultPhase({ result, onNewGame }) {
+  // Evaluates performance star awards directly from wallet thresholds
   const stars = result.score >= 20 ? '🌟🌟🌟' : result.score >= 12 ? '⭐⭐' : result.score >= 5 ? '⭐' : '💀';
 
   return (
     <Container className="py-4 d-flex justify-content-center">
       <Card className="p-5 text-center" style={{ maxWidth: 420, width: '100%' }}>
         <div style={{ fontSize: '4rem' }}>{stars}</div>
-        <h3 className="mt-3" style={{ color: '#f4a261' }}>
-          {result.valid ? 'Journey Complete!' : 'Invalid Route!'}
+        <h3 className="mt-3" style={{ color: '#d64316' }}>
+          {result.valid ? 'Trip Complete!' : 'Invalid Route!'}
         </h3>
 
         {!result.valid && (

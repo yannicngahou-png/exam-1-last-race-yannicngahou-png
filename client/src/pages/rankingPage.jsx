@@ -10,13 +10,15 @@ function RankingsPage() {
 
   useEffect(() => {
     API.getRankings()
-      .then(setRankings)
-      .catch(err => setError(err.message));
-  }, []);
+      .then(res => {
+        //console.log("Data received from API :", res);
+        setRankings(res)
+      }).catch(err => setError(err.message)); 
+    },[]);
 
   return (
     <Container className="py-5" style={{ maxWidth: 600 }}>
-      <h2 className="mb-4" style={{ color: '#f4a261' }}>🏆 General Rankings</h2>
+      <h2 className="mb-4" style={{ color: '#d64316' }}>🏆 General Rankings</h2>
       {error && <Alert variant="danger">{error}</Alert>}
       {!rankings ? (
         <div className="text-center"><Spinner animation="border" variant="warning" /></div>
@@ -35,13 +37,13 @@ function RankingsPage() {
               <tr key={row.username} className={row.username === user?.username ? 'ranking-row-me' : ''}>
                 <td>{i + 1}</td>
                 <td>
-                  {row.username === user?.username ? '⭐ ' : ''}{row.username}
+                  {row.username}
                 </td>
                 <td>
-                  <span className="coin-badge">{row.best_score}</span>
+                  <span >{row.bestScore}</span>
                   <small className="text-secondary ms-1">coins</small>
                 </td>
-                <td>{row.games_played}</td>
+                <td>{row.gamesPlayed}</td>
               </tr>
             ))}
           </tbody>
