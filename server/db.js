@@ -5,9 +5,13 @@ import crypto from "crypto";
 
 
 // Connexion to the lastRace database
-const db = new sqlite3.Database("lastRace.sqlite", (err) => {
- if (err) console.error("Error opening SQLite database file:", err.message);
-});
+//const db = new sqlite3.Database("lastRace.sqlite", (err) => {
+//  if (err) console.error("Error opening SQLite database file:", err.message); });
+
+const DB_PATH = process.env.DB_PATH || "./lastRace.sqlite";
+const db = new sqlite3.Database(DB_PATH);
+
+db.run("PRAGMA foreign_keys = ON");
 
 // Tables creation
 db.serialize(() => {

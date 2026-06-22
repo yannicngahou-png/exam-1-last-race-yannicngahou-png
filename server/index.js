@@ -7,32 +7,62 @@ import session from 'express-session';
 import passport from 'passport';
 import LocalStrategy from 'passport-local';
 import morgan from "morgan";
+import dotenv from 'dotenv';
+dotenv.config();
 
 import {verifyUserCredentials, getUserById, getAllLines, getAllStations, 
         getAllLineConnections, getAllEvents, getLeaderboardRankings, saveCompletedGame} from "./dao.js";
 import db from "./db.js";
 
 // init express
+process.env.CLIENT_URL
+process.env.SESSION_SECRET
 const app = new express();
-const port = 3001;
+const port = process.env.PORT || 3001;
+
+console.log("CLIENT_URL:", process.env.CLIENT_URL);
+console.log("CLIENT_URL =", JSON.stringify(process.env.CLIENT_URL));
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:8080"
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true
+}));
 
 // middlewares
 app.use(express.json());
 app.use(morgan("dev"));
 
-app.use(cors({
-  origin: 'http://localhost:5173', 
-  credentials: true                
-}));
 
 app.use(session({
-  secret: "LastRace game!",
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
 }));
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.use((req, res, next) => {
+  console.log("Origin:", req.headers.origin);
+  console.log("Allowed:", process.env.CLIENT_URL);
+  next();
+});
+
+app.use((req, res, next) => {
+  console.log("CLIENT_URL:", process.env.CLIENT_URL);
+  console.log("REQUEST ORIGIN:", req.headers.origin);
+  next();
+});
 
 passport.use(new LocalStrategy(async (username, password, cb) => {
   try {
@@ -60,6 +90,29 @@ const isLoggedIn = (req, res, next) => {
   }
   return res.status(401).json({error: "Not authenticated"});
 }
+
+app.get('/health', async (req, res) => {
+  try {
+    db.get("SELECT 1", [], (err) => {
+      if (err) return res.status(500).json({ status: "error" });
+
+      res.status(200).json({
+        status: "ok"
+      });
+    });
+  } catch {
+    res.status(500).json({
+      status: "error"
+    });
+  }
+});
+
+process.on("SIGTERM", () => {
+  console.log("Shutting down...");
+  db.close(() => {
+    process.exit(0);
+  });
+});
 
 /* ROUTES */
 
