@@ -15,7 +15,8 @@ spec:
     spec:
       containers:
       - name: backend
-        image: username/exam-backend:latest
+        image: yannickng/exam-backend:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 3001
 

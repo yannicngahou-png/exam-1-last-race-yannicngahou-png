@@ -43,6 +43,9 @@ app.use(cors({
 app.use(express.json());
 app.use(morgan("dev"));
 
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
 
 app.use(session({
   secret: process.env.SESSION_SECRET,

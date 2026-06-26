@@ -6,4 +6,4 @@ metadata:
 data:
   PORT: "3001"
   CLIENT_URL: "http://exam.local"
-  DB_PATH: "/lastRace.sqlite"
+  DB_PATH: "/data/lastRace.sqlite"
