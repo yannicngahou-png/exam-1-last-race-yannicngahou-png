@@ -14,4 +14,4 @@ RUN mkdir -p /data
 
 EXPOSE 3001
 
-CMD ["node", "index.js"]
+CMD ["node", "index.js"] 
